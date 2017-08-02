@@ -1,0 +1,78 @@
+---
+output: 
+  html_document: 
+    keep_md: yes
+---
+ # course5_Assignment1
+
+
+#Load and read activity.csv 
+```{r}
+Activity_table <- read.csv("activity.csv")
+Activity_table
+```
+# total number of the steps by each day
+```{r}
+Activity_steps_sum <- aggregate (steps ~ date, Activity_table, sum)
+Activity_steps_sum
+```
+# histogram of the total number of steps taken each day
+```{r}
+hist(Activity_steps_sum$steps, xlab = "date", ylab = "steps")
+```
+#report the mean and median of the total number of steps taken per day
+```{r}
+mean(Activity_steps_sum$steps)
+median(Activity_steps_sum$steps)
+```
+#time series plot
+```{r}
+time_series_plot <- aggregate (steps ~ interval,Activity_table,mean)
+plot(time_series_plot$interval, time_series_plot$steps,type ="l", xlab = "5-min interval", ylab = "Average number of steps")
+```
+#maximum interval
+```{r}
+a <- max(time_series_plot$steps)
+time_series_plot[a,]
+```
+#calculate and report the total number of NA
+```{r}
+sum(is.na(Activity_table$steps))
+```
+# create new dataset with missing data fill in
+```{r}
+NewDataset <- Activity_table
+k <- tapply (Activity_table$steps, Activity_table$interval,mean, na.rm = TRUE)
+for (i in 1:nrow (NewDataset)) {
+  if (is.na(NewDataset$steps[i])) {
+    NewDataset$steps[i] <- k[as.character(NewDataset[i,]$interval)]
+  }
+}
+head(NewDataset)
+```
+# histogram
+```{r}
+total_with_missing <- aggregate (steps ~ date, NewDataset, sum)
+hist(total_with_missing$steps, xlab = "Total number of steps taken each day")
+```
+#mean and median
+```{r}
+mean (total_with_missing$steps)
+median(total_with_missing$steps)
+```
+#weekday or weekend
+```{r}
+NewDataset$day <- format(as.Date(NewDataset$date),"%a")
+NewDataset$weekdays_weekend[NewDataset$day %in% c('Mon','Tue','Wed','Thu','Fri','Sat')] <- "weekday"
+NewDataset$weekdays_weekend[NewDataset$day %in% c('Sat','Sun')] <- "weekend"
+NewDataset
+```
+# plot for total number of steps taken
+```{r}
+library(lattice)
+plot_weekday_weekend <- aggregate (steps ~ interval +weekdays_weekend , NewDataset, 
+mean)
+xyplot(steps ~ interval | weekdays_weekend, plot_weekday_weekend,xlab = "interval", ylab = "Number of steps", type = "l")
+```
+
+
